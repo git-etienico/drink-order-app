@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: drink-order-app
+  namespace: drink-order-system
   labels:
     app: drink-order-app
 spec:
@@ -18,8 +19,8 @@ spec:
     spec:
       containers:
       - name: drink-order-app
-        # We'll update this image path after pushing to a registry
-        image: drink-order-app:latest
+        image: drinkorderacr2024.azurecr.io/drink-order-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         resources:
@@ -36,6 +37,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: drink-order-service
+  namespace: drink-order-system
 spec:
   selector:
     app: drink-order-app

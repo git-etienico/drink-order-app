@@ -22,7 +22,7 @@
             margin-bottom: 20px;
         }
         
-        input, select, button {
+        input, button {
             padding: 10px;
             margin: 5px;
             border: 1px solid #ddd;
@@ -34,10 +34,99 @@
             background-color: #4CAF50;
             color: white;
             cursor: pointer;
+            min-width: 40px;
         }
         
         button:hover {
             background-color: #45a049;
+        }
+        
+        .drink-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .drink-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .drink-emoji {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .drink-name {
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #1976D2;
+        }
+        
+        .quantity-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .quantity-display {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 5px 15px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .customer-section {
+            margin-bottom: 20px;
+        }
+        
+        .add-order-btn {
+            background-color: #FF5722;
+            font-size: 18px;
+            padding: 15px 30px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .add-order-btn:hover {
+            background-color: #E64A19;
+        }
+        
+        .add-order-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
         
         .order-item {
@@ -58,6 +147,14 @@
             font-size: 12px;
             padding: 5px 10px;
         }
+        
+        .current-order-summary {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -66,61 +163,173 @@
     <!-- Order form -->
     <div class="container">
         <h2>New Order</h2>
-        <input type="text" id="customerName" placeholder="Customer name" required>
         
-        <select id="drinkType">
-            <option value="Beer">🍺 Beer</option>
-            <option value="Wine">🍷 Wine</option>
-            <option value="Cocktail">🍹 Cocktail</option>
-            <option value="Soft Drink">🥤 Soft Drink</option>
-            <option value="Water">💧 Water</option>
-        </select>
+        <!-- Customer name input -->
+        <div class="customer-section">
+            <input type="text" id="customerName" placeholder="Customer name" required style="width: 100%; max-width: 300px;">
+        </div>
         
-        <input type="number" id="quantity" value="1" min="1" max="10">
+        <!-- Current order summary -->
+        <div id="currentOrderSummary" class="current-order-summary" style="display: none;">
+            <h3>📝 Current Order:</h3>
+            <div id="currentOrderDetails"></div>
+        </div>
         
-        <button onclick="addOrder()">Add Order</button>
+        <!-- Drinks selection -->
+        <div id="drinksMenu">
+            <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <button id="addOrderBtn" class="add-order-btn" onclick="addOrder()" disabled>
+            Add Order to List
+        </button>
     </div>
     
-<!-- Orders display -->
-<div class="container">
-    <h2>Current Orders (<span id="orderCount">0</span>)</h2>
-    
-    <!-- Drink totals summary -->
-    <div id="drinkTotals" style="background: #e3f2fd; padding: 15px; margin: 10px 0; border-radius: 5px;">
-        <h3>📊 Drinks to Prepare:</h3>
-        <div id="totalsDisplay">No pending orders</div>
-    </div>
+    <!-- Orders display -->
+    <div class="container">
+        <h2>Current Orders (<span id="orderCount">0</span>)</h2>
+        
+        <!-- Drink totals summary -->
+        <div id="drinkTotals" style="background: #e3f2fd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+            <h3>📊 Drinks to Prepare:</h3>
+            <div id="totalsDisplay">No pending orders</div>
+        </div>
+        
         <div id="ordersList">
             <p>No orders yet...</p>
         </div>
         <button onclick="clearAllOrders()" style="background-color: #f44336;">Clear All Orders</button>
     </div>
 
-    <!-- We'll add JavaScript here in next part -->
-     <script>
-        // Array to store all orders - like a digital notepad
+    <script>
+        // Drinks menu with emojis
+        const drinksMenu = [
+            { name: "Biere", emoji: "🍺" },
+            { name: "Biere N/A", emoji: "🍻" },
+            { name: "Biere Speciale", emoji: "🍺" },
+            { name: "Coca", emoji: "🥤" },
+            { name: "Coca Zero", emoji: "🥤" },
+            { name: "Eau plate", emoji: "💧" },
+            { name: "Eau Petillante", emoji: "🫧" },
+            { name: "Fanta / Orange", emoji: "🍊" },
+            { name: "Sprite / Limonade", emoji: "🍋" },
+            { name: "Jus d'Orange", emoji: "🧃" },
+            { name: "Aquarius blanc", emoji: "🥤" },
+            { name: "Aquarius bleu", emoji: "🥤" },
+            { name: "Blanc Coca", emoji: "🥤" },
+            { name: "Vin Blanc", emoji: "🍷" },
+            { name: "Vin Rosé", emoji: "🍷" },
+            { name: "Vin Rouge", emoji: "🍷" },
+            { name: "Café", emoji: "☕" },
+            { name: "Soupe", emoji: "🍲" },
+            { name: "Chips Sel", emoji: "🥔" },
+            { name: "Chips Paprika", emoji: "🥔" },
+            { name: "Boulette", emoji: "🧆" }
+        ];
+
+        // Current order quantities
+        let currentOrder = {};
+        
+        // All orders storage
         let orders = [];
         let orderIdCounter = 1;
 
-        // Function to add a new order
-        function addOrder() {
-            // Get values from form inputs
-            const customerName = document.getElementById('customerName').value;
-            const drinkType = document.getElementById('drinkType').value;
-            const quantity = parseInt(document.getElementById('quantity').value);
+        // Initialize the drinks menu
+        function initializeDrinksMenu() {
+            const menuContainer = document.getElementById('drinksMenu');
             
-            // Check if customer name is filled
-            if (!customerName.trim()) {
+            drinksMenu.forEach(drink => {
+                const drinkItem = document.createElement('div');
+                drinkItem.className = 'drink-item';
+                drinkItem.innerHTML = `
+                    <div class="drink-info">
+                        <span class="drink-emoji">${drink.emoji}</span>
+                        <span class="drink-name">${drink.name}</span>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="changeQuantity('${drink.name}', -1)">-</button>
+                        <div class="quantity-display" id="qty-${drink.name.replace(/[^a-zA-Z0-9]/g, '')}">0</div>
+                        <button class="quantity-btn" onclick="changeQuantity('${drink.name}', 1)">+</button>
+                    </div>
+                `;
+                menuContainer.appendChild(drinkItem);
+                
+                // Initialize quantity to 0
+                currentOrder[drink.name] = 0;
+            });
+        }
+
+        // Change quantity for a drink
+        function changeQuantity(drinkName, change) {
+            currentOrder[drinkName] += change;
+            
+            // Don't allow negative quantities
+            if (currentOrder[drinkName] < 0) {
+                currentOrder[drinkName] = 0;
+            }
+            
+            // Update display
+            const displayId = 'qty-' + drinkName.replace(/[^a-zA-Z0-9]/g, '');
+            document.getElementById(displayId).textContent = currentOrder[drinkName];
+            
+            // Update current order summary
+            updateCurrentOrderSummary();
+            
+            // Enable/disable add order button
+            updateAddOrderButton();
+        }
+
+        // Update current order summary
+        function updateCurrentOrderSummary() {
+            const summary = document.getElementById('currentOrderSummary');
+            const details = document.getElementById('currentOrderDetails');
+            
+            const items = Object.entries(currentOrder)
+                .filter(([drink, qty]) => qty > 0)
+                .map(([drink, qty]) => `${qty}x ${drink}`)
+                .join(', ');
+            
+            if (items) {
+                details.textContent = items;
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+
+        // Update add order button state
+        function updateAddOrderButton() {
+            const button = document.getElementById('addOrderBtn');
+            const customerName = document.getElementById('customerName').value.trim();
+            const hasItems = Object.values(currentOrder).some(qty => qty > 0);
+            
+            button.disabled = !customerName || !hasItems;
+        }
+
+        // Add order to list
+        function addOrder() {
+            const customerName = document.getElementById('customerName').value.trim();
+            
+            if (!customerName) {
                 alert('Please enter customer name!');
                 return;
             }
             
-            // Create new order object
+            // Create order items from current selection
+            const orderItems = Object.entries(currentOrder)
+                .filter(([drink, qty]) => qty > 0)
+                .map(([drink, qty]) => ({ drink, quantity: qty }));
+            
+            if (orderItems.length === 0) {
+                alert('Please select at least one drink!');
+                return;
+            }
+            
+            // Create new order
             const newOrder = {
                 id: orderIdCounter++,
-                customer: customerName.trim(),
-                drink: drinkType,
-                quantity: quantity,
+                customer: customerName,
+                items: orderItems,
                 served: false,
                 timestamp: new Date().toLocaleTimeString()
             };
@@ -128,9 +337,8 @@
             // Add to orders array
             orders.push(newOrder);
             
-            // Clear the form
-            document.getElementById('customerName').value = '';
-            document.getElementById('quantity').value = '1';
+            // Reset form
+            resetOrderForm();
             
             // Update display
             displayOrders();
@@ -138,24 +346,43 @@
             console.log('New order added:', newOrder);
         }
 
-// Function to display all orders
+        // Reset order form
+        function resetOrderForm() {
+            // Clear customer name
+            document.getElementById('customerName').value = '';
+            
+            // Reset all quantities to 0
+            Object.keys(currentOrder).forEach(drink => {
+                currentOrder[drink] = 0;
+                const displayId = 'qty-' + drink.replace(/[^a-zA-Z0-9]/g, '');
+                document.getElementById(displayId).textContent = '0';
+            });
+            
+            // Update displays
+            updateCurrentOrderSummary();
+            updateAddOrderButton();
+        }
+
+        // Display all orders (keeping existing functionality)
         function displayOrders() {
             const ordersList = document.getElementById('ordersList');
             const orderCount = document.getElementById('orderCount');
             const totalsDisplay = document.getElementById('totalsDisplay');
             
-            // Filter pending orders (not served yet)
+            // Filter pending orders
             const pendingOrders = orders.filter(order => !order.served);
             orderCount.textContent = pendingOrders.length;
             
-            // Calculate drink totals for pending orders
+            // Calculate drink totals
             const drinkTotals = {};
             pendingOrders.forEach(order => {
-                if (drinkTotals[order.drink]) {
-                    drinkTotals[order.drink] += order.quantity;
-                } else {
-                    drinkTotals[order.drink] = order.quantity;
-                }
+                order.items.forEach(item => {
+                    if (drinkTotals[item.drink]) {
+                        drinkTotals[item.drink] += item.quantity;
+                    } else {
+                        drinkTotals[item.drink] = item.quantity;
+                    }
+                });
             });
             
             // Display drink totals
@@ -166,18 +393,16 @@
                 for (const [drink, total] of Object.entries(drinkTotals)) {
                     totalsHtml += `<strong>${drink}:</strong> ${total} | `;
                 }
-                // Remove last " | "
                 totalsHtml = totalsHtml.slice(0, -3);
                 totalsDisplay.innerHTML = totalsHtml;
             }
             
-            // If no orders, show message
+            // Display orders
             if (orders.length === 0) {
                 ordersList.innerHTML = '<p>No orders yet...</p>';
                 return;
             }
             
-            // Build HTML for all orders
             let html = '';
             orders.forEach(order => {
                 const servedClass = order.served ? 'served' : '';
@@ -186,10 +411,12 @@
                     '' : 
                     `<button class="serve-btn" onclick="markAsServed(${order.id})">Mark as Served</button>`;
                 
+                const itemsList = order.items.map(item => `${item.quantity}x ${item.drink}`).join(', ');
+                
                 html += `
                     <div class="order-item ${servedClass}">
                         <strong>${order.customer}</strong> - 
-                        ${order.quantity}x ${order.drink} 
+                        ${itemsList}
                         <small>(${order.timestamp})</small>
                         ${servedText}
                         ${serveButton}
@@ -200,9 +427,8 @@
             ordersList.innerHTML = html;
         }
 
-        // Function to mark order as served
+        // Mark order as served
         function markAsServed(orderId) {
-            // Find the order and mark it as served
             const order = orders.find(o => o.id === orderId);
             if (order) {
                 order.served = true;
@@ -211,7 +437,7 @@
             }
         }
 
-        // Function to clear all orders
+        // Clear all orders
         function clearAllOrders() {
             if (confirm('Are you sure you want to clear all orders?')) {
                 orders = [];
@@ -221,16 +447,21 @@
             }
         }
 
-        // Allow Enter key to add order
+        // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize drinks menu
+            initializeDrinksMenu();
+            
+            // Listen for customer name changes
+            document.getElementById('customerName').addEventListener('input', updateAddOrderButton);
+            
+            // Allow Enter key to add order
             document.getElementById('customerName').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !document.getElementById('addOrderBtn').disabled) {
                     addOrder();
                 }
             });
         });
     </script>
-</body>
-</html>
 </body>
 </html>
