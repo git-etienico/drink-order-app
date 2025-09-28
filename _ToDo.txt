@@ -1,0 +1,1 @@
+AKS is working, now I want to create an Azure container registy with my app

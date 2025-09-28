@@ -1,0 +1,46 @@
+# Kubernetes Deployment - defines how to run our app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drink-order-app
+  labels:
+    app: drink-order-app
+spec:
+  # Number of app instances to run
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drink-order-app
+  template:
+    metadata:
+      labels:
+        app: drink-order-app
+    spec:
+      containers:
+      - name: drink-order-app
+        # We'll update this image path after pushing to a registry
+        image: drink-order-app:latest
+        ports:
+        - containerPort: 80
+        resources:
+          # Resource limits to prevent overconsumption
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+---
+# Kubernetes Service - exposes our app within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: drink-order-service
+spec:
+  selector:
+    app: drink-order-app
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP

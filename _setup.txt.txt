@@ -1,0 +1,814 @@
+# Create folder for our project
+mkdir drink-order-app
+cd drink-order-app
+
+# Open this folder in VS Code
+code .
+
+# Initialize Git repository (tells Git to track this folder)
+git init
+
+# Configure your name and email (replace with your info)
+git config user.name "Nicolas ETIENNE"
+git config user.email "nicolas.etienne@gmail.com"
+
+# Create index.html file
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drink Orders</title>
+</head>
+<body>
+    <h1>Drink Order Manager - Party</h1>
+    <p>Version 1 - Initial test</p>
+</body>
+</html>
+
+# Add all files to Git staging
+git add .
+
+# Create our first "snapshot" with a message
+git commit -m "Initial commit - basic HTML page"
+
+# Replace your index.html content with
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drink Orders - Party Manager</title>
+    <style>
+        /* Basic styling for mobile-friendly interface */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .order-item {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .served {
+            background: #e8f5e8;
+            opacity: 0.7;
+        }
+        
+        .serve-btn {
+            background-color: #008CBA;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍻 Party Drink Orders</h1>
+    
+    <!-- Order form -->
+    <div class="container">
+        <h2>New Order</h2>
+        <input type="text" id="customerName" placeholder="Customer name" required>
+        
+        <select id="drinkType">
+            <option value="Beer">🍺 Beer</option>
+            <option value="Wine">🍷 Wine</option>
+            <option value="Cocktail">🍹 Cocktail</option>
+            <option value="Soft Drink">🥤 Soft Drink</option>
+            <option value="Water">💧 Water</option>
+        </select>
+        
+        <input type="number" id="quantity" value="1" min="1" max="10">
+        
+        <button onclick="addOrder()">Add Order</button>
+    </div>
+    
+    <!-- Orders display -->
+    <div class="container">
+        <h2>Current Orders (<span id="orderCount">0</span>)</h2>
+        <div id="ordersList">
+            <p>No orders yet...</p>
+        </div>
+        <button onclick="clearAllOrders()" style="background-color: #f44336;">Clear All Orders</button>
+    </div>
+
+    <!-- We'll add JavaScript here in next part -->
+</body>
+</html>
+
+# STEP 3: Add JavaScript functionality
+3.1 Add JavaScript before closing </body> tag
+Add this JavaScript code just before </body> in your index.html:
+<script>
+        // Array to store all orders - like a digital notepad
+        let orders = [];
+        let orderIdCounter = 1;
+
+        // Function to add a new order
+        function addOrder() {
+            // Get values from form inputs
+            const customerName = document.getElementById('customerName').value;
+            const drinkType = document.getElementById('drinkType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            // Check if customer name is filled
+            if (!customerName.trim()) {
+                alert('Please enter customer name!');
+                return;
+            }
+            
+            // Create new order object
+            const newOrder = {
+                id: orderIdCounter++,
+                customer: customerName.trim(),
+                drink: drinkType,
+                quantity: quantity,
+                served: false,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            // Add to orders array
+            orders.push(newOrder);
+            
+            // Clear the form
+            document.getElementById('customerName').value = '';
+            document.getElementById('quantity').value = '1';
+            
+            // Update display
+            displayOrders();
+            
+            console.log('New order added:', newOrder);
+        }
+
+        // Function to display all orders
+        function displayOrders() {
+            const ordersList = document.getElementById('ordersList');
+            const orderCount = document.getElementById('orderCount');
+            
+            // Update counter
+            const pendingOrders = orders.filter(order => !order.served);
+            orderCount.textContent = pendingOrders.length;
+            
+            // If no orders, show message
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p>No orders yet...</p>';
+                return;
+            }
+            
+            // Build HTML for all orders
+            let html = '';
+            orders.forEach(order => {
+                const servedClass = order.served ? 'served' : '';
+                const servedText = order.served ? '✅ SERVED' : '';
+                const serveButton = order.served ? 
+                    '' : 
+                    `<button class="serve-btn" onclick="markAsServed(${order.id})">Mark as Served</button>`;
+                
+                html += `
+                    <div class="order-item ${servedClass}">
+                        <strong>${order.customer}</strong> - 
+                        ${order.quantity}x ${order.drink} 
+                        <small>(${order.timestamp})</small>
+                        ${servedText}
+                        ${serveButton}
+                    </div>
+                `;
+            });
+            
+            ordersList.innerHTML = html;
+        }
+
+        // Function to mark order as served
+        function markAsServed(orderId) {
+            // Find the order and mark it as served
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.served = true;
+                displayOrders();
+                console.log('Order served:', order);
+            }
+        }
+
+        // Function to clear all orders
+        function clearAllOrders() {
+            if (confirm('Are you sure you want to clear all orders?')) {
+                orders = [];
+                orderIdCounter = 1;
+                displayOrders();
+                console.log('All orders cleared');
+            }
+        }
+
+        // Allow Enter key to add order
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('customerName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addOrder();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+# STEP 3.2: Add drink totals counter3.2.1 Add HTML for totals displayIn your index.html, find this section:
+<!-- Orders display -->
+<div class="container">
+    <h2>Current Orders (<span id="orderCount">0</span>)</h2>
+    
+    <!-- Drink totals summary -->
+    <div id="drinkTotals" style="background: #e3f2fd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>📊 Drinks to Prepare:</h3>
+        <div id="totalsDisplay">No pending orders</div>
+    </div>
+	
+# STEP 4: Commit changes and create Docker container4.1 Save changes to GitIn VS Code terminal:
+# Add all changes to Git staging
+git add .
+
+# Commit with descriptive message
+git commit -m "Add drink order functionality with totals counter
+
+- Complete order form with customer name, drink type, quantity
+- Real-time order display with served/pending status
+- Drink totals summary for easy preparation counting
+- Mobile-friendly responsive design
+- Enter key support for quick order entry"
+
+# 4.2 Create Dockerfile
+Create a new file called Dockerfile (no extension, exactly this name):
+	# Use official nginx image as base - lightweight web server
+	FROM nginx:alpine
+
+	# Copy our HTML file to nginx web directory
+	COPY index.html /usr/share/nginx/html/
+
+	# Expose port 80 for web traffic
+	EXPOSE 80
+
+	# nginx starts automatically, so no CMD needed
+	
+# 4.3 Create .dockerignore file
+Create .dockerignore file:
+# Build container image with a name tag
+docker build -t drink-order-app .
+
+# Check if image was created
+docker images
+# 4.4 Build the Docker container
+	# Build container image with a name tag
+	docker build -t drink-order-app .
+
+	# Check if image was created
+	docker images
+	
+# 4.5 Run the container locally
+	# Run container and map port 8080 on your machine to port 80 in container
+	docker run -d -p 8080:80 --name drink-orders drink-order-app
+
+	# Check if container is running
+	docker ps
+
+http://localhost:8080
+
+# 4.6 Test and stop container
+	# View container logs (useful for debugging)
+	docker logs drink-orders
+
+	# Stop the container
+	docker stop drink-orders
+
+	# Remove the container (but keep the image)
+	docker rm drink-orders
+	
+# STEP 5: Push to GitHub and prepare for Kubernetes
+5.1 Commit Docker files to Git
+# Add Docker files to Git
+git add .
+
+# Commit Docker configuration
+git commit -m "Add Docker containerization
+
+- Dockerfile with nginx:alpine base image
+- .dockerignore for clean builds
+- Successfully tested container running on localhost:8080"
+
+# 5.2 Create GitHub repository
+
+Go to GitHub.com in your browser
+Sign in to your GitHub account
+Click green "New" button (or the "+" icon → "New repository")
+Repository name: drink-order-app
+Description: Simple drink order manager for parties - HTML/JS with Docker
+Make it Public (so you can share it easily)
+Don't check "Add README" (we already have files)
+Click "Create repository"
+
+# 5.3 Connect local project to GitHub
+	GitHub will show you commands, but here they are:
+	# Add GitHub as remote origin
+	git remote add origin https://github.com/git-etienico/drink-order-app.git
+
+	# Rename main branch (GitHub uses 'main', Git uses 'master')
+	git branch -M main
+
+	# Push code to GitHub
+	git push -u origin main
+	
+# 5.4 Verify on GitHub
+Refresh GitHub page - you should see your files
+Check: index.html, Dockerfile, .dockerignore should be visible
+Your project is now online and shareable!
+
+# STEP 6: Create Kubernetes configuration files
+6.1 Create Kubernetes deployment file
+Create k8s-deployment.yaml:
+# Kubernetes Deployment - defines how to run our app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drink-order-app
+  labels:
+    app: drink-order-app
+spec:
+  # Number of app instances to run
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drink-order-app
+  template:
+    metadata:
+      labels:
+        app: drink-order-app
+    spec:
+      containers:
+      - name: drink-order-app
+        # We'll update this image path after pushing to a registry
+        image: drink-order-app:latest
+        ports:
+        - containerPort: 80
+        resources:
+          # Resource limits to prevent overconsumption
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+---
+# Kubernetes Service - exposes our app within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: drink-order-service
+spec:
+  selector:
+    app: drink-order-app
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+  
+# 6.2 Create Ingress configuration for external access
+Create k8s-ingress.yaml:
+# Ingress - exposes our app to the internet
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drink-order-ingress
+  annotations:
+    # Use nginx ingress controller
+    kubernetes.io/ingress.class: nginx
+    # Enable SSL/HTTPS
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Redirect HTTP to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - drink-orders.your-domain.com  # You'll need to change this
+    secretName: drink-order-tls
+  rules:
+  - host: drink-orders.your-domain.com  # You'll need to change this
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: drink-order-service
+            port:
+              number: 80
+# 6.3 Create namespace and configuration
+Create k8s-namespace.yaml:
+# Namespace - creates isolated environment for our app
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drink-order-system
+  labels:
+    name: drink-order-system
+---
+# ConfigMap - stores configuration data
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drink-order-config
+  namespace: drink-order-system
+data:
+  # Environment-specific settings
+  environment: "production"
+  max_orders: "100"
+  app_name: "Drink Order Manager"
+  
+# 6.4 Create Azure Container Registry setup
+Create azure-setup.sh (script to help with Azure setup):
+#!/bin/bash
+# Azure setup script for drink-order-app
+
+# Variables - you'll need to customize these
+RESOURCE_GROUP="drink-order-rg"
+LOCATION="westeurope"  # Change to your preferred region
+ACR_NAME="drinkorderacr$(date +%s)"  # Unique name with timestamp
+AKS_NAME="drink-order-aks"
+
+echo "Setting up Azure resources for drink-order-app..."
+
+# Create resource group
+echo "Creating resource group..."
+az group create --name $RESOURCE_GROUP --location $LOCATION
+
+# Create Azure Container Registry
+echo "Creating Azure Container Registry..."
+az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
+
+# Create AKS cluster
+echo "Creating AKS cluster (this takes 5-10 minutes)..."
+az aks create \
+    --resource-group $RESOURCE_GROUP \
+    --name $AKS_NAME \
+    --node-count 2 \
+    --node-vm-size Standard_B2s \
+    --enable-addons ingress \
+    --attach-acr $ACR_NAME \
+    --generate-ssh-keys
+
+echo "Setup complete!"
+echo "ACR Name: $ACR_NAME"
+echo "AKS Name: $AKS_NAME"
+echo "Resource Group: $RESOURCE_GROUP"
+
+# 6.5 Commit Kubernetes files
+
+# Add all Kubernetes files
+git add .
+
+# Commit Kubernetes configuration
+git commit -m "Add Kubernetes configuration for Azure deployment
+
+- k8s-deployment.yaml: App deployment with 2 replicas
+- k8s-ingress.yaml: External access with HTTPS
+- k8s-namespace.yaml: Isolated namespace and config
+- azure-setup.sh: Azure infrastructure setup script"
+
+# Push to GitHub
+git push origin main
+
+
+# STEP 7.2: Create Terraform folder structure
+7.2.1 Create terraform directory
+In VS Code terminal (make sure you're in the project root):
+	# Make sure you're in the project root directory
+	pwd
+	# Should show: .../drink-order-app
+
+	# Create terraform subdirectory
+	mkdir terraform
+
+	# Check folder structure
+	ls -l
+	
+# 7.2.2 Create main.tf in terraform folder
+Create file: terraform/main.tf
+In VS Code:
+
+Right-click on terraform folder in explorer
+New File → name it main.tf
+Paste this content:
+# Configure Azure Provider
+# Configure Azure Provider
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"
+    }
+  }
+}
+
+# Configure Azure Provider features
+provider "azurerm" {
+  features {}
+}
+
+# Create Resource Group
+resource "azurerm_resource_group" "main" {
+  name     = var.resource_group_name
+  location = var.location
+
+  tags = {
+    Environment = var.environment
+    Project     = "drink-order-app"
+    CreatedBy   = "terraform"
+  }
+}
+
+# Create Azure Container Registry
+resource "azurerm_container_registry" "acr" {
+  name                = var.acr_name
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  sku                 = "Basic"
+  admin_enabled       = true
+
+  tags = {
+    Environment = var.environment
+    Project     = "drink-order-app"
+  }
+}
+
+# Create AKS Cluster
+resource "azurerm_kubernetes_cluster" "aks" {
+  name                = var.aks_cluster_name
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  dns_prefix          = var.aks_dns_prefix
+
+  default_node_pool {
+    name       = "default"
+    node_count = var.node_count
+    vm_size    = var.node_vm_size
+
+    # Enable auto-scaling
+    enable_auto_scaling = true
+    min_count          = 1
+    max_count          = 3
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  # Network configuration
+  network_profile {
+    network_plugin = "kubenet"
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = "drink-order-app"
+  }
+}
+
+# Enable Application Routing addon (replaces deprecated HTTP routing)
+resource "azurerm_kubernetes_cluster_extension" "app_routing" {
+  name           = "app-routing"
+  cluster_id     = azurerm_kubernetes_cluster.aks.id
+  extension_type = "Microsoft.Web.AppRouting"
+}
+
+# Attach ACR to AKS
+resource "azurerm_role_assignment" "aks_acr" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+}
+
+# 7.2.3 Create variables.tf
+Create file: terraform/variables.tf
+In VS Code:
+
+Right-click on terraform folder
+New File → name it variables.tf
+Paste this content:
+# Variables for Azure resources
+
+variable "resource_group_name" {
+  description = "Name of the resource group"
+  type        = string
+  default     = "RG_AKS"
+}
+
+variable "location" {
+  description = "Azure region for resources"
+  type        = string
+  default     = "Germany West Central"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "demo"
+}
+
+variable "acr_name" {
+  description = "Name for Azure Container Registry (must be globally unique)"
+  type        = string
+  default     = "drinkorderacr"
+}
+
+variable "aks_cluster_name" {
+  description = "Name of the AKS cluster"
+  type        = string
+  default     = "drink-order-aks"
+}
+
+variable "aks_dns_prefix" {
+  description = "DNS prefix for AKS cluster"
+  type        = string
+  default     = "drink-order"
+}
+
+variable "node_count" {
+  description = "Number of nodes in the AKS cluster"
+  type        = number
+  default     = 2
+}
+
+variable "node_vm_size" {
+  description = "VM size for AKS nodes"
+  type        = string
+  default     = "Standard_B2s"
+}
+
+# 7.2.4 Create outputs.tf
+Create file: terraform/outputs.tf
+# Output values after Terraform creates resources
+
+output "resource_group_name" {
+  description = "Name of the created resource group"
+  value       = azurerm_resource_group.main.name
+}
+
+output "acr_login_server" {
+  description = "ACR login server URL"
+  value       = azurerm_container_registry.acr.login_server
+}
+
+output "acr_admin_username" {
+  description = "ACR admin username"
+  value       = azurerm_container_registry.acr.admin_username
+  sensitive   = true
+}
+
+output "acr_admin_password" {
+  description = "ACR admin password"
+  value       = azurerm_container_registry.acr.admin_password
+  sensitive   = true
+}
+
+output "aks_cluster_name" {
+  description = "Name of the AKS cluster"
+  value       = azurerm_kubernetes_cluster.aks.name
+}
+
+output "aks_cluster_fqdn" {
+  description = "FQDN of the AKS cluster"
+  value       = azurerm_kubernetes_cluster.aks.fqdn
+}
+
+output "kube_config" {
+  description = "Kubernetes config for connecting to cluster"
+  value       = azurerm_kubernetes_cluster.aks.kube_config_raw
+  sensitive   = true
+}
+
+# 7.2.5 Create terraform.tfvars (customize for you)
+Create file: terraform/terraform.tfvars
+# Customize these values for your deployment
+
+resource_group_name = "drink-order-rg"
+location           = "West Europe"  # Change to your preferred region
+environment        = "demo"
+
+# ACR name must be globally unique - add your initials/numbers
+acr_name = "drinkorderacr2024"  # Change this to something unique!
+
+aks_cluster_name = "drink-order-aks"
+aks_dns_prefix   = "drink-order"
+
+# Start small for cost optimization
+node_count   = 2
+node_vm_size = "Standard_B2s"
+
+# 7.2.6 Check your folder structure
+Your project should now look like this:
+drink-order-app/
+├── index.html
+├── Dockerfile
+├── .dockerignore
+├── k8s-deployment.yaml
+├── k8s-ingress.yaml
+├── k8s-namespace.yaml
+├── azure-setup.sh
+└── terraform/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    └── terraform.tfvars
+
+# 7.2.7 Commit Terraform files
+# Add all Terraform files
+git add .
+
+# Commit Terraform configuration
+git commit -m "Add Terraform configuration for Azure AKS deployment
+
+- terraform/main.tf: AKS cluster, ACR, and resource group
+- terraform/variables.tf: Configurable parameters  
+- terraform/outputs.tf: Important values after deployment
+- terraform/terraform.tfvars: Environment-specific settings
+- Auto-scaling enabled (1-3 nodes)
+- ACR integration for container images"
+
+# Push to GitHub
+git push origin main
+
+# STEP 8: Set up Azure CLI and deploy with Terraform
+8.1 Install Azure CLI (if not installed)
+Check if already installed:
+az --version
+az upgrade  
+Or install : https://aka.ms/installazurecliwindows
+
+# 8.2 Login to Azure
+# Login to your Azure account
+	az login
+
+	# List your subscriptions
+	az account list --output table
+
+	# Set default subscription (if you have multiple)
+	# az account set --subscription "488c618c-643c-458d-9aed-4f25c42a228e"
+
+# 8.3 Initialize Terraform
+	# Navigate to terraform directory
+	cd terraform
+
+	# Initialize Terraform (downloads Azure provider)
+	terraform init
+
+	# Validate configuration
+	terraform validate
+
+	# See what Terraform will create (dry run)
+	terraform plan
+	
+# 8.4 Deploy Azure infrastructure
+	# Deploy infrastructure (will take 10-15 minutes)
+	terraform apply
+
+	# Type 'yes' when prompted
+
+# 8.5 Get deployment outputs
+# Show important values after deployment
+	terraform output
+
+# Get ACR login details (we'll need these)
+	terraform output acr_login_server
+	terraform output acr_admin_username
+	terraform output -raw acr_admin_password

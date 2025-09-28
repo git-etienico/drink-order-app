@@ -1,0 +1,19 @@
+# Namespace - creates isolated environment for our app
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drink-order-system
+  labels:
+    name: drink-order-system
+---
+# ConfigMap - stores configuration data
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drink-order-config
+  namespace: drink-order-system
+data:
+  # Environment-specific settings
+  environment: "production"
+  max_orders: "100"
+  app_name: "Drink Order Manager"

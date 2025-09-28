@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drink Orders - Party Manager</title>
+    <style>
+        /* Basic styling for mobile-friendly interface */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .order-item {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .served {
+            background: #e8f5e8;
+            opacity: 0.7;
+        }
+        
+        .serve-btn {
+            background-color: #008CBA;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍻 Party Drink Orders</h1>
+    
+    <!-- Order form -->
+    <div class="container">
+        <h2>New Order</h2>
+        <input type="text" id="customerName" placeholder="Customer name" required>
+        
+        <select id="drinkType">
+            <option value="Beer">🍺 Beer</option>
+            <option value="Wine">🍷 Wine</option>
+            <option value="Cocktail">🍹 Cocktail</option>
+            <option value="Soft Drink">🥤 Soft Drink</option>
+            <option value="Water">💧 Water</option>
+        </select>
+        
+        <input type="number" id="quantity" value="1" min="1" max="10">
+        
+        <button onclick="addOrder()">Add Order</button>
+    </div>
+    
+<!-- Orders display -->
+<div class="container">
+    <h2>Current Orders (<span id="orderCount">0</span>)</h2>
+    
+    <!-- Drink totals summary -->
+    <div id="drinkTotals" style="background: #e3f2fd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>📊 Drinks to Prepare:</h3>
+        <div id="totalsDisplay">No pending orders</div>
+    </div>
+        <div id="ordersList">
+            <p>No orders yet...</p>
+        </div>
+        <button onclick="clearAllOrders()" style="background-color: #f44336;">Clear All Orders</button>
+    </div>
+
+    <!-- We'll add JavaScript here in next part -->
+     <script>
+        // Array to store all orders - like a digital notepad
+        let orders = [];
+        let orderIdCounter = 1;
+
+        // Function to add a new order
+        function addOrder() {
+            // Get values from form inputs
+            const customerName = document.getElementById('customerName').value;
+            const drinkType = document.getElementById('drinkType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            // Check if customer name is filled
+            if (!customerName.trim()) {
+                alert('Please enter customer name!');
+                return;
+            }
+            
+            // Create new order object
+            const newOrder = {
+                id: orderIdCounter++,
+                customer: customerName.trim(),
+                drink: drinkType,
+                quantity: quantity,
+                served: false,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            // Add to orders array
+            orders.push(newOrder);
+            
+            // Clear the form
+            document.getElementById('customerName').value = '';
+            document.getElementById('quantity').value = '1';
+            
+            // Update display
+            displayOrders();
+            
+            console.log('New order added:', newOrder);
+        }
+
+// Function to display all orders
+        function displayOrders() {
+            const ordersList = document.getElementById('ordersList');
+            const orderCount = document.getElementById('orderCount');
+            const totalsDisplay = document.getElementById('totalsDisplay');
+            
+            // Filter pending orders (not served yet)
+            const pendingOrders = orders.filter(order => !order.served);
+            orderCount.textContent = pendingOrders.length;
+            
+            // Calculate drink totals for pending orders
+            const drinkTotals = {};
+            pendingOrders.forEach(order => {
+                if (drinkTotals[order.drink]) {
+                    drinkTotals[order.drink] += order.quantity;
+                } else {
+                    drinkTotals[order.drink] = order.quantity;
+                }
+            });
+            
+            // Display drink totals
+            if (Object.keys(drinkTotals).length === 0) {
+                totalsDisplay.innerHTML = 'No pending orders';
+            } else {
+                let totalsHtml = '';
+                for (const [drink, total] of Object.entries(drinkTotals)) {
+                    totalsHtml += `<strong>${drink}:</strong> ${total} | `;
+                }
+                // Remove last " | "
+                totalsHtml = totalsHtml.slice(0, -3);
+                totalsDisplay.innerHTML = totalsHtml;
+            }
+            
+            // If no orders, show message
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p>No orders yet...</p>';
+                return;
+            }
+            
+            // Build HTML for all orders
+            let html = '';
+            orders.forEach(order => {
+                const servedClass = order.served ? 'served' : '';
+                const servedText = order.served ? '✅ SERVED' : '';
+                const serveButton = order.served ? 
+                    '' : 
+                    `<button class="serve-btn" onclick="markAsServed(${order.id})">Mark as Served</button>`;
+                
+                html += `
+                    <div class="order-item ${servedClass}">
+                        <strong>${order.customer}</strong> - 
+                        ${order.quantity}x ${order.drink} 
+                        <small>(${order.timestamp})</small>
+                        ${servedText}
+                        ${serveButton}
+                    </div>
+                `;
+            });
+            
+            ordersList.innerHTML = html;
+        }
+
+        // Function to mark order as served
+        function markAsServed(orderId) {
+            // Find the order and mark it as served
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.served = true;
+                displayOrders();
+                console.log('Order served:', order);
+            }
+        }
+
+        // Function to clear all orders
+        function clearAllOrders() {
+            if (confirm('Are you sure you want to clear all orders?')) {
+                orders = [];
+                orderIdCounter = 1;
+                displayOrders();
+                console.log('All orders cleared');
+            }
+        }
+
+        // Allow Enter key to add order
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('customerName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addOrder();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+</body>
+</html>

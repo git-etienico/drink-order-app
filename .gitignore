@@ -1,0 +1,31 @@
+# Terraform files to ignore
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars.backup
+terraform/.terraform.tfstate.lock.info
+
+# Azure CLI installer
+*.msi
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Node modules (if we add them later)
+node_modules/
+
+# Docker files (optional)
+.dockerignore
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,28 @@
+# Ingress - exposes our app to the internet
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drink-order-ingress
+  annotations:
+    # Use nginx ingress controller
+    kubernetes.io/ingress.class: nginx
+    # Enable SSL/HTTPS
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Redirect HTTP to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - drink-orders.your-domain.com  # You'll need to change this
+    secretName: drink-order-tls
+  rules:
+  - host: drink-orders.your-domain.com  # You'll need to change this
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: drink-order-service
+            port:
+              number: 80
